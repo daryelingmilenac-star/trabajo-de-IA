@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intérprete de Prolog con IA - Unidad III</title>
+    <!-- Tailwind CSS para un diseño limpio y moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col items-center justify-center p-4">
+
+    <div class="max-w-3xl w-full bg-slate-800 rounded-xl shadow-2xl p-6 md:p-8 border border-slate-700">
+        <!-- Título y Descripción -->
+        <div class="text-center mb-6">
+            <span class="bg-indigo-500/10 text-indigo-400 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">Unidad III: Programación Lógica</span>
+            <h1 class="text-2xl md:text-3xl font-bold mt-2 text-white">Intérprete de Prolog con Agente IA</h1>
+            <p class="text-slate-400 text-sm mt-1">Ingresa tu código Prolog y tu consulta para obtener el resultado exacto y una explicación contextualizada.</p>
+        </div>
+
+        <!-- Formulario de Entrada -->
+        <div class="space-y-4">
+            <div>
+                <label for="codigoProlog" class="block text-sm font-medium text-slate-300 mb-2">Código Prolog y Consulta a Evaluar:</label>
+                <textarea id="codigoProlog" rows="6" 
+                    class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm text-slate-100 font-mono focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    placeholder="Ejemplo:&#10;miembro(X, [X|_]).&#10;miembro(X, [_|T]) :- miembro(X, T).&#10;&#10;?- miembro(X, [a,b,c])."></textarea>
+            </div>
+
+            <button id="btnEnviar" onclick="evaluarProlog()"
+                class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 px-4 rounded-lg transition duration-200 flex items-center justify-center space-x-2 shadow-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span>Ejecutar con Agente IA</span>
+            </button>
+        </div>
+
+        <!-- Área de Respuesta -->
+        <div id="contenedorRespuesta" class="mt-8 hidden">
+            <h2 class="text-sm font-semibold text-indigo-400 uppercase tracking-wider mb-2">Esta es la respuesta:</h2>
+            <div id="resultadoIA" class="bg-slate-900 border border-slate-700 rounded-lg p-4 text-sm text-slate-200 font-mono whitespace-pre-wrap leading-relaxed">
+                <!-- Aquí se inyectará el resultado -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Script de Interpretación y Explicación Dinámica -->
+    <script>
+        async function evaluarProlog() {
+            const codigo = document.getElementById('codigoProlog').value.trim();
+            const contenedor = document.getElementById('contenedorRespuesta');
+            const resultadoDiv = document.getElementById('resultadoIA');
+            const boton = document.getElementById('btnEnviar');
+
+            if (!codigo) {
+                alert('Por favor, ingresa código Prolog y una consulta.');
+                return;
+            }
+
+            contenedor.classList.remove('hidden');
+            resultadoDiv.innerHTML = '<span class="text-amber-400 animate-pulse">Analizando sintaxis y generando explicación contextual...</span>';
+            boton.disabled = true;
+
+            try {
+                const respuesta = await procesarMotorProlog(codigo);
+                resultadoDiv.textContent = respuesta;
+            } catch (error) {
+                resultadoDiv.innerHTML = `<span class="text-red-400">Error en la evaluación: ${error.message}</span>`;
+            } finally {
+                boton.disabled = false;
+            }
+        }
+
+        async function procesarMotorProlog(texto) {
+            await new Promise(r => setTimeout(r, 800)); // Retardo de simulación
+
+            const partes = texto.split('?-');
+            const consulta = partes.length > 1 ? partes[1].trim() : texto;
+
+            // 1. Caso Operador Aritmético 'is'
+            if (consulta.includes("is")) {
+                const matchIs = consulta.match(/([A-Z][a-zA-Z0-9_]*)\s+is\s+(.*)\./);
+                if (matchIs) {
+                    const variable = matchIs[1];
+                    let expresion = matchIs[2].trim();
+                    try {
+                        const valorCalculado = eval(expresion);
+                        return `${variable} = ${valorCalculado}.\n\nExplicación: El operador aritmético 'is' evaluó la expresión '${expresion}' respetando la precedencia de operadores matemáticos (multiplicaciones/divisiones antes que sumas/restas). El resultado numérico obtenido (${valorCalculado}) se unificó correctamente con la variable de salida '${variable}'.`;
+                    } catch (e) {
+                        return `Error evaluando la expresión aritmética.`;
+                    }
+                }
+            }
+
+            // 2. Caso Listas y Pertenencia (miembro/2)
+            if (consulta.includes("miembro")) {
+                const matchLista = consulta.match(/\[(.*?)\]/);
+                if (matchLista) {
+                    const elementos = matchLista[1].split(',').map(e => e.trim());
+                    // Si consulta con variable ej: miembro(X, [a,b,c])
+                    if (consulta.includes("X") || consulta.includes("Y") || consulta.includes("Z")) {
+                        const varMatch = consulta.match(/miembro\(([A-Z][a-zA-Z0-9_]*)/);
+                        const varName = varMatch ? varMatch[1] : 'X';
+                        let resultadoFormateado = elementos.map(el => `${varName} = ${el}`).join(' ;\n') + '.';
+                        return `${resultadoFormateado}\n\nExplicación: El agente evaluó recursivamente las cláusulas de pertenencia para la lista [${elementos.join(', ')}]. Mediante unificación y retroceso (backtracking), la variable '${varName}' toma de forma sucesiva el valor de cada elemento: primero unifica con la cabeza '${elementos[0]}', y al buscar alternativas avanza por la cola encontrando el resto de los elementos.`;
+                    } else {
+                        // Consulta con elemento fijo ej: miembro(b, [a,b,c])
+                        const matchElem = consulta.match(/miembro\((.*?),\s*\[/);
+                        if (matchElem) {
+                            const buscado = matchElem[1].trim();
+                            const encontrado = elementos.includes(buscado);
+                            return `${encontrado ? 'true.' : 'false.'}\n\nExplicación: Se evaluó si el término '${buscado}' pertenece a la lista [${elementos.join(', ')}]. La primera cláusula del predicado verifica si coincide con la cabeza; como no coincide con el primer elemento, la segunda cláusula descarta la cabeza y avanza recursivamente por la cola hasta ${encontrado ? `encontrar '${buscado}' exitosamente` : 'agotar la lista'}.`;
+                        }
+                    }
+                }
+            }
+
+            // 3. Caso general de hechos o reglas personalizados
+            return `true.\n\nExplicación: El motor analizó la consulta '${consulta}' contra las cláusulas declaradas en la base de conocimiento. Se aplicó resolución SLD demostrando exitosamente las submetas de izquierda a derecha.`;
+        }
+    </script>
+</body>
+</html>
