@@ -23,7 +23,7 @@
                 <label for="codigoProlog" class="block text-sm font-medium text-slate-300 mb-2">Código Prolog y Consulta a Evaluar:</label>
                 <textarea id="codigoProlog" rows="6" 
                     class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm text-slate-100 font-mono focus:ring-2 focus:ring-indigo-500 focus:outline-none leading-relaxed"
-                    placeholder="Ejemplo:&#10;?- X is 3 + 4 * 2."></textarea>
+                    placeholder="Ejemplo:&#10;?- X is 4 + 5 * 9."></textarea>
             </div>
 
             <button id="btnEnviar" onclick="evaluarProlog()"
@@ -44,7 +44,7 @@
         </div>
     </div>
 
-    <!-- Script de Interpretación Robusta -->
+    <!-- Script con Explicación 100% Dinámica -->
     <script>
         async function evaluarProlog() {
             const codigo = document.getElementById('codigoProlog').value.trim();
@@ -58,7 +58,7 @@
             }
 
             contenedor.classList.remove('hidden');
-            resultadoDiv.innerHTML = '<span class="text-amber-400 animate-pulse">El agente está procesando la consulta...</span>';
+            resultadoDiv.innerHTML = '<span class="text-amber-400 animate-pulse">El agente está procesando la consulta y generando la explicación...</span>';
             boton.disabled = true;
 
             try {
@@ -77,15 +77,16 @@
             const partes = texto.split('?-');
             let consulta = partes.length > 1 ? partes[1].trim() : texto.trim();
 
-            // 1. Evaluación Aritmética Flexible con 'is' (acepta x o X, con o sin punto)
+            // 1. Evaluación Aritmética 100% Dinámica
             if (consulta.includes("is")) {
                 const matchIs = consulta.match(/([a-zA-Z_][a-zA-Z0-9_]*)\s+is\s+(.+)/i);
                 if (matchIs) {
-                    let variable = matchIs[1].toUpperCase(); // En Prolog la variable se normaliza a Mayúscula
-                    let expresion = matchIs[2].replace(/\.$/, '').trim(); // Quita el punto final si lo tiene
+                    let variable = matchIs[1].toUpperCase();
+                    let expresion = matchIs[2].replace(/\.$/, '').trim();
                     try {
                         const valorCalculado = eval(expresion);
-                        return `${variable} = ${valorCalculado}.\n\nExplicación: El operador aritmético 'is' evaluó la expresión '${expresion}' respetando la precedencia de operadores (multiplicación 4 * 2 = 8, luego suma 3 + 8 = 11) y unificó el resultado numérico exacto con la variable '${variable}'.`;
+                        // Explicación completamente generada de forma dinámica según la expresión ingresada
+                        return `${variable} = ${valorCalculado}.\n\nExplicación: El operador aritmético 'is' evaluó la expresión '${expresion}' respetando la precedencia de operadores matemáticos. Al resolver la operación, el resultado numérico obtenido es ${valorCalculado}, el cual se unificó correctamente con la variable de salida '${variable}'.`;
                     } catch (e) {
                         return `Error evaluando la expresión aritmética.`;
                     }
@@ -108,7 +109,7 @@
                         if (matchElem) {
                             const buscado = matchElem[1].trim();
                             const encontrado = elementos.includes(buscado);
-                            return `${encontrado ? 'true.' : 'false.'}\n\nExplicación: La primera cláusula no unifica con ${elementos[0] || 'la cabeza'}; la segunda avanza por la cola y ${encontrado ? `encuentra ${buscado}` : `no encuentra el elemento ${buscado}`}.`;
+                            return `${encontrado ? 'true.' : 'false.'}\n\nExplicación: Se evaluó la pertenencia del elemento '${buscado}' en la lista [${elementos.join(', ')}]. La primera cláusula verifica la cabeza; al no coincidir, la segunda avanza recursivamente por la cola hasta ${encontrado ? 'encontrarlo con éxito' : 'agotar los elementos'}.`;
                         }
                     }
                 }
